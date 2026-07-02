@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>서울 관광 자치구 가이드</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <div id="app-container" class="app-container">
+      
+      <!-- Map Section (Left side, takes full screen by default) -->
+      <main class="map-section">
+        <!-- Floating Header -->
+        <header class="floating-header glassmorphism">
+          <h1>서울 익스플로러</h1>
+          <p>서울의 각 자치구를 클릭하여 대표 관광명소와 지역 소개를 확인해 보세요.</p>
+        </header>
+
+        <!-- Search Bar (Top Right) -->
+        <div class="search-container glassmorphism">
+          <input type="text" id="search-input" class="search-input" placeholder="자치구 또는 명소 검색..." autocomplete="off">
+          <button id="search-btn" class="search-btn" aria-label="검색">🔍</button>
+          <!-- Optional: search suggestions dropdown -->
+          <ul id="search-suggestions" class="search-suggestions"></ul>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map-container">
+          <!-- D3 Map is rendered here -->
+        </div>
+
+        <!-- Theme Control (Bottom Left) -->
+        <div class="theme-control">
+          <button id="theme-toggle" class="theme-btn glassmorphism">
+            <span class="mode-icon">🌙</span> <span class="mode-text">다크 모드</span>
+          </button>
+        </div>
+
+        <!-- Zoom Controls (Bottom Right) -->
+        <div class="zoom-controls">
+          <button id="zoom-in" class="zoom-btn">+</button>
+          <button id="zoom-out" class="zoom-btn">−</button>
+          <button id="zoom-reset" class="zoom-btn">⟲</button>
+        </div>
+        
+        <!-- Instructions overlay -->
+        <div class="instruction-overlay">
+          지도에서 관심 있는 자치구를 클릭하면 상세 정보가 나타납니다.
+        </div>
+      </main>
+
+      <!-- Detail Info Panel (Right side, slides in when a district is clicked) -->
+      <aside id="detail-section" class="detail-section">
+        <button id="detail-close" class="detail-close" aria-label="상세 정보 닫기">&times;</button>
+        
+        <!-- District View (Default) -->
+        <div id="district-view" class="detail-scroll-container">
+          <div class="detail-hero">
+            <img id="detail-image" class="detail-image" src="" alt="자치구 대표 이미지" />
+            <div class="detail-image-overlay"></div>
+            <h2 id="detail-title" class="detail-title">자치구 이름</h2>
+          </div>
+          
+          <div class="detail-body">
+            <section class="detail-intro-box">
+              <h3 class="section-title">지역 소개</h3>
+              <p id="detail-description" class="detail-description">자치구 설명...</p>
+            </section>
+            
+            <section class="detail-landmark-box">
+              <h3 class="section-title">대표 관광지</h3>
+              <div id="detail-landmark-list" class="detail-landmark-list">
+                <!-- Landmarks will be rendered here dynamically -->
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- Landmark Detail View (Hidden by default) -->
+        <div id="landmark-view" class="detail-scroll-container" style="display: none;">
+          <div class="detail-hero">
+            <img id="landmark-detail-image" class="detail-image" src="" alt="관광지 이미지" />
+            <div class="detail-image-overlay"></div>
+            <h2 id="landmark-detail-title" class="detail-title">관광지 이름</h2>
+            <button id="back-to-district" class="back-btn" aria-label="자치구로 돌아가기">
+              ← 자치구로 돌아가기
+            </button>
+          </div>
+          
+          <div class="detail-body">
+            <section class="landmark-intro-box">
+              <h3 class="section-title">관광지 소개</h3>
+              <p id="landmark-detail-description" class="detail-description">관광지 설명...</p>
+            </section>
+            
+            <section class="landmark-info-box">
+              <h3 class="section-title">상세 정보</h3>
+              <ul class="landmark-info-list">
+                <li><span class="info-icon">🕒</span> <strong>운영 시간:</strong> <span id="landmark-info-time">-</span></li>
+                <li><span class="info-icon">💰</span> <strong>비용:</strong> <span id="landmark-info-fee">-</span></li>
+                <li><span class="info-icon">📍</span> <strong>위치:</strong> <span id="landmark-info-address">-</span></li>
+                <li id="landmark-caution-item"><span class="info-icon">⚠️</span> <strong>주의사항:</strong> <span id="landmark-info-caution">-</span></li>
+                <li id="landmark-website-item"><span class="info-icon">🌐</span> <strong>웹사이트:</strong> <a href="#" id="landmark-info-website" target="_blank" rel="noopener noreferrer">홈페이지 바로가기</a></li>
+              </ul>
+            </section>
+
+            <section class="landmark-map-box">
+              <h3 class="section-title">지도에서 보기</h3>
+              <div class="landmark-map-container">
+                <iframe id="landmark-google-map" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
+            </section>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+    <script src="./main.js"></script>
+  </body>
+</html>
