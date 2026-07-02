@@ -1,0 +1,751 @@
+:root {
+  /* Light Mode (Beige Default) */
+  --bg-color: #fbfaf7;          /* Creamy warm white/beige background */
+  --text-color: #2c2a29;        /* Deep charcoal (warm dark) */
+  --text-muted: #605b56;        /* Muted brownish grey */
+  --accent-color: #b89665;      /* Warm bronze/gold accent */
+  --accent-hover: #cfab7a;      /* Soft lighter gold for hovers */
+  --accent-light: #f3efe6;      /* Extremely light beige/cream for card backgrounds */
+  --border-color: #e6e2da;      /* Soft warm grey border */
+  --district-stroke: #a2988b;   /* Darker outline to clearly separate districts */
+  --map-land: #eae5dc;          /* Warm land color */
+  --map-water: #f4f1ea;         /* Soft water-beige color */
+  --river-color: #a8cbf0;       /* Han River color: soft sky blue */
+  --glass-bg: rgba(251, 250, 247, 0.85); /* Semi-transparent beige */
+  --glass-border: rgba(184, 150, 101, 0.25); /* Soft bronze border */
+  --shadow: 0 10px 30px rgba(44, 42, 41, 0.08);
+}
+
+[data-theme="dark"] {
+  /* Dark Mode */
+  --bg-color: #1e1b18;          /* Warm dark brown/charcoal */
+  --text-color: #f3efe6;        /* Creamy text */
+  --text-muted: #a49e97;        /* Muted brown/grey */
+  --accent-color: #d6b280;      /* Brighter gold */
+  --accent-hover: #e9c89a;      /* Brighter gold hover */
+  --accent-light: #2c2724;      /* Darker warm brown for tag background */
+  --border-color: #3d3530;      /* Dark warm grey border */
+  --district-stroke: #5c4e45;   /* Dark charcoal-brown outline for clear separation */
+  --map-land: #2e2825;          /* Dark warm land */
+  --map-water: #181513;         /* Dark water area */
+  --river-color: #214375;       /* Han River color: deep steel blue */
+  --glass-bg: rgba(30, 27, 24, 0.85); /* Semi-transparent dark */
+  --glass-border: rgba(214, 178, 128, 0.25); /* Soft gold border */
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* App Container - Flex layout with absolute positioning for drawers */
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--map-water);
+  transition: background-color 0.3s ease;
+}
+
+/* Map Section (Always 100% width, translates when sidebar is active) */
+.map-section {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sliding active states */
+.app-container.detail-active .map-section {
+  transform: translateX(-17.5%); /* Perfectly shifts map to stay centered in remaining space */
+}
+
+.app-container.detail-active .detail-section {
+  transform: translateX(0);
+}
+
+/* Floating Header */
+.floating-header {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  padding: 1.5rem 2rem;
+  z-index: 10;
+  max-width: 400px;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+.floating-header h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--text-color) 0%, var(--accent-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.floating-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+#map-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* D3 Map Styling */
+.district {
+  fill: var(--map-land);
+  stroke: var(--district-stroke);
+  stroke-width: 1.8px;
+  cursor: pointer;
+  transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.2s ease;
+}
+
+.district:hover {
+  fill: var(--bg-color);
+  stroke: var(--accent-hover);
+  stroke-width: 2.5px;
+}
+
+.district.active {
+  fill: var(--accent-light);
+  stroke: var(--accent-color);
+  stroke-width: 2.5px;
+}
+
+/* District Text Labels */
+.district-label {
+  fill: var(--text-color);
+  font-size: 11px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none; /* Let clicks pass through to the path */
+  /* Small stroke/shadow for readability against background */
+  paint-order: stroke;
+  stroke: var(--bg-color);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: fill 0.3s ease, font-size 0.2s ease;
+}
+
+[data-theme="dark"] .district-label {
+  fill: var(--bg-color);
+  stroke: var(--text-color);
+}
+
+.district:hover + .district-label,
+.district.active + .district-label {
+  font-size: 12px;
+}
+
+/* Double Stroke River Styling */
+.river-outline-thick {
+  fill: none;
+  stroke: #333333; /* Dark border */
+  stroke-width: 18px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.river-outline-medium {
+  fill: none;
+  stroke: #333333;
+  stroke-width: 14px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.river-water-thick {
+  fill: none;
+  stroke: #d8f5f5; /* Light Cyan water */
+  stroke-width: 16px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.river-water-medium {
+  fill: none;
+  stroke: #d0f4f7;
+  stroke-width: 12px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Glassmorphism utility */
+.glassmorphism {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Detail Info Panel (Right side slide-in) */
+.detail-section {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 35%;
+  height: 100%;
+  background: var(--bg-color);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+  transform: translateX(100%);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s, border-color 0.3s;
+  z-index: 15;
+  pointer-events: auto;
+}
+
+.detail-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 36px;
+  height: 36px;
+  background: rgba(44, 42, 41, 0.1);
+  border: none;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  z-index: 25;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.detail-close:hover {
+  background: rgba(44, 42, 41, 0.2);
+  transform: scale(1.05);
+}
+
+[data-theme="dark"] .detail-close {
+  background: rgba(243, 239, 230, 0.1);
+}
+
+[data-theme="dark"] .detail-close:hover {
+  background: rgba(243, 239, 230, 0.2);
+}
+
+.detail-scroll-container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Detail Hero Area with Image Overlay */
+.detail-hero {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(44, 42, 41, 0.7) 0%, rgba(44, 42, 41, 0) 60%);
+}
+
+.detail-title {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Detail Body & Layout Boxes */
+.detail-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.4rem;
+}
+
+.detail-description {
+  line-height: 1.6;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Landmarks Cards List inside Sidebar */
+.detail-landmark-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.landmark-card {
+  position: relative;
+  background: var(--accent-light);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s, background-color 0.3s;
+}
+
+.landmark-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+  border-color: var(--accent-color);
+}
+
+.landmark-card-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rep-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: var(--accent-color);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rep-badge::before {
+  content: '★';
+  font-size: 0.8rem;
+  color: #fff;
+}
+
+.landmark-card-content {
+  padding: 1rem;
+}
+
+.landmark-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 0.4rem;
+}
+
+.tags {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: var(--bg-color);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.landmark-card-desc {
+  line-height: 1.5;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* Theme Control (Bottom Left) */
+.theme-control {
+  position: absolute;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 10;
+}
+
+.theme-btn {
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Instructions Overlay */
+.instruction-overlay {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-color);
+  padding: 0.8rem 1.5rem;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+/* Zoom controls */
+.zoom-controls {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.zoom-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.zoom-btn:hover {
+  background: var(--bg-color);
+  border-color: var(--accent-color);
+}
+
+/* Responsive configurations */
+@media (max-width: 1024px) {
+  .detail-section {
+    width: 45%;
+  }
+  .app-container.detail-active .map-section {
+    transform: translateX(-22.5%);
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-header {
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+    padding: 1rem;
+  }
+  .floating-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  /* Stacks layout vertically on mobile */
+  .detail-section {
+    width: 100%;
+    height: 60%;
+    top: auto;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    transform: translateY(100%);
+  }
+  
+  .app-container.detail-active .map-section {
+    transform: translateY(-20%);
+  }
+  
+  .app-container.detail-active .detail-section {
+    transform: translateY(0);
+  }
+  
+  .instruction-overlay {
+    bottom: 5.5rem;
+    font-size: 0.8rem;
+    width: calc(100% - 2rem);
+    text-align: center;
+  }
+}
+
+/* Search Bar Styles */
+.search-container {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  width: 300px;
+  transition: all 0.3s ease;
+}
+
+.search-input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-btn {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0 0 0 0.5rem;
+  transition: transform 0.2s;
+}
+
+.search-btn:hover {
+  transform: scale(1.1);
+}
+
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  list-style: none;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  display: none;
+  z-index: 20;
+}
+
+.search-suggestions.active {
+  display: block;
+}
+
+.search-suggestion-item {
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.search-suggestion-item:hover {
+  background-color: var(--accent-light);
+}
+
+.search-suggestion-match {
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+
+
+.search-suggestion-badge {
+  background-color: var(--accent-color);
+  color: var(--bg-color);
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+@keyframes glowEffect {
+  0% { box-shadow: 0 0 0px var(--accent-color); border-color: var(--border-color); }
+  50% { box-shadow: 0 0 25px var(--accent-color); border-color: var(--accent-color); }
+  100% { box-shadow: 0 0 0px var(--accent-color); border-color: var(--border-color); }
+}
+
+.highlight-glow {
+  animation: glowEffect 2s ease-out;
+  border-color: var(--accent-color) !important;
+}
+
+/* ==========================================================================
+   Landmark Detail View Styles
+   ========================================================================== */
+
+/* View Transition Styles */
+#district-view, #landmark-view {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Back Button */
+.back-btn {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-color);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.back-btn:hover {
+  background: var(--bg-color);
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+/* Landmark Info List */
+.landmark-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.landmark-info-list li {
+  background: var(--accent-light);
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+.landmark-info-list li strong {
+  min-width: 70px;
+  color: var(--text-color);
+}
+
+.landmark-info-list li span:last-child {
+  flex-grow: 1;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.info-icon {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Website Link styling */
+#landmark-info-website {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+  word-break: break-all;
+}
+
+#landmark-info-website:hover {
+  text-decoration: underline;
+  color: var(--accent-hover);
+}
+
+/* Map Container */
+.landmark-map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  background: var(--accent-light);
+}
+
+.landmark-map-container iframe {
+  display: block;
+}
